@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+</head>
+<body class="container">
+  <div id="js-eth-price"></div>
+  <div id="js-sell-orders">0</div>
+  <div id="js-buy-orders">0</div>
+</body>
+<script>
+  var ws = new WebSocket("wss://ws-feed.gdax.com");
+  ws.onmessage = function(resp) {
+    var data  = data = JSON.parse(resp.data);
+    console.log(data)
+    if (data.type === 'ticker') {
+      $('#js-eth-price').html(data.price);
+    }
+    if (data.type === 'received') {
+      if (data.side === 'sell') {
+        $('#js-sell-orders').html(Number($('#js-sell-orders').html()) + 1);
+      } else {
+        $('#js-buy-orders').html(Number($('#js-buy-orders').html()) + 1);
+      }
+    }
+  };
+  ws.onopen = function() {
+    console.log('opened');
+    ws.send(JSON.stringify({
+      type : "subscribe",
+      product_ids : [
+        "ETH-USD"
+      ],
+      channels : [
+        "full",
+        {
+          "name" : "ticker",
+            "product_ids": [
+              "ETH-USD"
+            ]
+        }
+      ]
+    }));
+  }
+</script>
+</html>
