@@ -1,26 +1,61 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <link rel="stylesheet" href="/css/d3.css" />
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.5/lodash.min.js"></script>
 </head>
 <body class="container">
   <div id="js-eth-price"></div>
-  <div id="js-sell-orders">0</div>
-  <div id="js-buy-orders">0</div>
+  <div>Sell by order count: <span id="js-sell-orders">0</span></div>
+  <div>Sell by volume: <span id="js-sell-volume">0</span></div>
+  <div>Sell volume/s: <span id="js-sell-volume-rate">0</span></div>
+  <div>Buy by order count: <span id="js-buy-orders">0</span></div>
+  <div>Buy by volume: <span id="js-buy-volume">0</span></div>
+  <div>Buy volume/s: <span id="js-buy-volume-rate">0</span></div>
 </body>
 <script>
-  var ws = new WebSocket("wss://ws-feed.gdax.com");
+  var ws = new WebSocket("wss://ws-feed.gdax.com"),
+      $ethPrice = $('#js-eth-price'),
+      $sellOrders = $('#js-sell-orders'),
+      $sellVolume = $('#js-sell-volume'),
+      $sellVolumeRate = $('#js-sell-volume-rate'),
+      $buyOrders = $('#js-buy-orders'),
+      $buyVolume = $('#js-buy-volume'),
+      $buyVolumeRate = $('#js-buy-volume-rate'),
+      sellVolumeArr = [],
+      buyVolumeArr = [];
+
+  window.setInterval(function() {
+    var currentTime = new Date();
+
+    _.remove(sellVolumeArr, function(data) {
+      return (currentTime - new Date(data.time)) > 1000;
+    });
+
+    _.remove(buyVolumeArr, function(data) {
+      return (currentTime - new Date(data.time)) > 1000;
+    });
+
+    $sellVolumeRate.html(_.meanBy(sellVolumeArr, function(data) { return Number(data.size); }));
+    $buyVolumeRate.html(_.meanBy(buyVolumeArr, function(data) { return Number(data.size); }));
+  }, 100);
+
   ws.onmessage = function(resp) {
     var data  = data = JSON.parse(resp.data);
-    console.log(data)
+    // console.log(data)
     if (data.type === 'ticker') {
-      $('#js-eth-price').html(data.price);
+      $ethPrice.html(data.price);
     }
-    if (data.type === 'received') {
+    if (data.type === 'received' && data.size) {
       if (data.side === 'sell') {
-        $('#js-sell-orders').html(Number($('#js-sell-orders').html()) + 1);
+        sellVolumeArr.push(data);
+        $sellOrders.html(Number($sellOrders.html()) + 1);
+        $sellVolume.html(Number($sellVolume.html()) + Number(data.size));
       } else {
-        $('#js-buy-orders').html(Number($('#js-buy-orders').html()) + 1);
+        buyVolumeArr.push(data);
+        $buyOrders.html(Number($buyOrders.html()) + 1);
+        $buyVolume.html(Number($buyVolume.html()) + Number(data.size));
       }
     }
   };
