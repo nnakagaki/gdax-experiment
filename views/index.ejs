@@ -28,6 +28,8 @@
       $buyVolumeRate = $('#js-buy-volume-rate'),
       sellVolumeArr = [],
       buyVolumeArr = [],
+      sellRateArr = [],
+      buyRateArr = [],
       plotInitialized = false;
 
   window.setInterval(function() {
@@ -41,19 +43,39 @@
       return (currentTime - new Date(data.time)) > 1000;
     });
 
-    $sellVolumeRate.html(_.meanBy(sellVolumeArr, function(data) { return Number(data.size); }));
-    $buyVolumeRate.html(_.meanBy(buyVolumeArr, function(data) { return Number(data.size); }));
+    var sellRate = _.meanBy(sellVolumeArr, function(data) { return Number(data.size); });
+    var buyRate = _.meanBy(buyVolumeArr, function(data) { return Number(data.size); });
+
+    $sellVolumeRate.html(sellRate);
+    $buyVolumeRate.html(buyRate);
+
+    console.log(sellRateArr)
+
+    var currentDate = new Date();
+
+    if (sellRate) {
+      sellRateArr.push({ x : currentDate.valueOf(), y : sellRate });
+    }
+
+    if (buyRate) {
+      buyRateArr.push({ x : currentDate.valueOf(), y : buyRate });
+    }
+
+    if (sellRateArr.length > 100) {
+      sellRateArr.shift();
+    }
+
+    if (buyRateArr.length > 100) {
+      buyRateArr.shift();
+    }
 
     if (sellVolumeArr.length > 0) {
+      console.log([sellRateArr, buyRateArr])
       if (!plotInitialized) {
-        d3Plotter(_.map(sellVolumeArr, function(o) {
-          return { x : new Date(o.time).valueOf(), y : Number(o.size) }
-        }));
+        d3Plotter([sellRateArr, buyRateArr]);
         plotInitialized = true;
       } else {
-        updatePlot(_.map(sellVolumeArr, function(o) {
-          return { x : new Date(o.time).valueOf(), y : Number(o.size) }
-        }));
+        updatePlot([sellRateArr, buyRateArr]);
       }
     }
   }, 100);

@@ -1,5 +1,11 @@
-path {
-  stroke: steelblue;
+path.sell {
+  stroke: red;
+  stroke-width: 1;
+  fill: none;
+}
+
+path.buy {
+  stroke: green;
   stroke-width: 1;
   fill: none;
 }
