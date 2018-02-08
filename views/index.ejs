@@ -4,6 +4,8 @@
   <link rel="stylesheet" href="/css/d3.css" />
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.5/lodash.min.js"></script>
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+  <script src="/js/d3Plot.js"></script>
 </head>
 <body class="container">
   <div id="js-eth-price"></div>
@@ -13,6 +15,7 @@
   <div>Buy by order count: <span id="js-buy-orders">0</span></div>
   <div>Buy by volume: <span id="js-buy-volume">0</span></div>
   <div>Buy volume/s: <span id="js-buy-volume-rate">0</span></div>
+  <div id="graph" class="aGraph"></div>
 </body>
 <script>
   var ws = new WebSocket("wss://ws-feed.gdax.com"),
@@ -24,7 +27,8 @@
       $buyVolume = $('#js-buy-volume'),
       $buyVolumeRate = $('#js-buy-volume-rate'),
       sellVolumeArr = [],
-      buyVolumeArr = [];
+      buyVolumeArr = [],
+      plotInitialized = false;
 
   window.setInterval(function() {
     var currentTime = new Date();
@@ -39,6 +43,19 @@
 
     $sellVolumeRate.html(_.meanBy(sellVolumeArr, function(data) { return Number(data.size); }));
     $buyVolumeRate.html(_.meanBy(buyVolumeArr, function(data) { return Number(data.size); }));
+
+    if (sellVolumeArr.length > 0) {
+      if (!plotInitialized) {
+        d3Plotter(_.map(sellVolumeArr, function(o) {
+          return { x : new Date(o.time).valueOf(), y : Number(o.size) }
+        }));
+        plotInitialized = true;
+      } else {
+        updatePlot(_.map(sellVolumeArr, function(o) {
+          return { x : new Date(o.time).valueOf(), y : Number(o.size) }
+        }));
+      }
+    }
   }, 100);
 
   ws.onmessage = function(resp) {
