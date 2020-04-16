@@ -1,69 +1,62 @@
 import React, { useState, useEffect } from 'react';
 import { PublicClient } from 'coinbase-pro';
-
-let currentInterval;
+import Strategy from './Strategy';
 
 export default function() {
-  const [currentETHInUSD, setCurrentETHInUSD] = useState(null);
-  const [highestETHInUSD, setHighestETHInUSD] = useState(0);
-  const [lowestETHInUSD, setLowestETHInUSD] = useState(99999999);
-  const [shouldBuy, setShouldBuy] = useState(false);
-  const [shouldSell, setShouldSell] = useState(false);
-
+  const [data, setData] = useState({});
+  const [initialized, setInitialized] = useState(false);
+  let strategy;
   const publicClient = new PublicClient();
-
-  const buyingPrice = lowestETHInUSD * 1.01;
-  const sellingPrice = highestETHInUSD * 0.99;
 
   useEffect(() => {
     publicClient.getProductHistoricRates('ETH-USD', { granularity : 3600 }).then((result) => {
-      setLowestETHInUSD(result[0][1]);
-      setHighestETHInUSD(result[0][2]);
+      strategy = new Strategy({
+        currentValue : result[0][4],
+        lowestValue  : result[0][1],
+        highestValue : result[0][2]
+      });
+      setData({
+        buyingPrice  : strategy.buyingPrice,
+        currentValue : strategy.currentValue,
+        highestValue : strategy.highestValue,
+        lowestValue  : strategy.lowestValue,
+        sellingPrice : strategy.sellingPrice,
+        shouldSell   : strategy.shouldSell,
+        shouldBuy    : strategy.shouldBuy
+      });
+      setInitialized(true);
+      setInterval(() => {
+        publicClient.getProductTicker('ETH-USD').then((result) => {
+          console.log(result)
+          const { price } = result;
+          strategy.update(price);
+          setData({
+            buyingPrice  : strategy.buyingPrice,
+            currentValue : strategy.currentValue,
+            highestValue : strategy.highestValue,
+            lowestValue  : strategy.lowestValue,
+            sellingPrice : strategy.sellingPrice,
+            shouldSell   : strategy.shouldSell,
+            shouldBuy    : strategy.shouldBuy
+          });
+        });
+      }, 1000);
     });
   }, []);
 
-  useEffect(() => {
-    if (!currentETHInUSD) {
-      return;
-    }
-    if (currentETHInUSD > buyingPrice) {
-      setShouldBuy(true);
-    } else {
-      setShouldBuy(false);
-    }
-    if (currentETHInUSD < sellingPrice) {
-      setShouldSell(true);
-    } else {
-      setShouldSell(false);
-    }
-  }, [currentETHInUSD, highestETHInUSD, lowestETHInUSD, buyingPrice, sellingPrice]);
-
-  useEffect(() => {
-    clearInterval(currentInterval);
-    currentInterval = setInterval(() => {
-      publicClient.getProductTicker('ETH-USD').then((result) => {
-        console.log(result)
-        const { price } = result;
-        setCurrentETHInUSD(price);
-        if (price > highestETHInUSD) {
-          setHighestETHInUSD(price);
-        }
-        if (price < lowestETHInUSD) {
-          setLowestETHInUSD(price);
-        }
-      });
-    }, 1000);
-  }, [currentETHInUSD, highestETHInUSD, lowestETHInUSD]);
-
   return (
     <>
-      <div>currentETHInUSD: {currentETHInUSD}</div>
-      <div>highestETHInUSD: {highestETHInUSD}</div>
-      <div>sell when ETH in USD is lower than: {sellingPrice}</div>
-      <div>lowestETHInUSD: {lowestETHInUSD}</div>
-      <div>buy when ETH In USD is higher than: {buyingPrice}</div>
-      <div>should sell: {shouldSell.toString()}</div>
-      <div>should buy: {shouldBuy.toString()}</div>
+      { initialized && (
+        <>
+          <div>currentETHInUSD: {data.currentValue}</div>
+          <div>highestETHInUSD: {data.highestValue}</div>
+          <div>sell when ETH in USD is lower than: {data.sellingPrice}</div>
+          <div>lowestETHInUSD: {data.lowestValue}</div>
+          <div>buy when ETH In USD is higher than: {data.buyingPrice}</div>
+          <div>should sell: {data.shouldSell.toString()}</div>
+          <div>should buy: {data.shouldBuy.toString()}</div>
+        </>
+      )}
     </>
   )
 }
