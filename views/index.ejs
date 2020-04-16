@@ -8,113 +8,109 @@
   <script src="/js/d3Plot.js"></script>
 </head>
 <body class="container">
+  <div id="app"></div>
   <div id="js-eth-price"></div>
-  <div>Sell by order count: <span id="js-sell-orders">0</span></div>
-  <div>Sell by volume: <span id="js-sell-volume">0</span></div>
-  <div>Sell volume/s: <span id="js-sell-volume-rate">0</span></div>
-  <div>Buy by order count: <span id="js-buy-orders">0</span></div>
-  <div>Buy by volume: <span id="js-buy-volume">0</span></div>
-  <div>Buy volume/s: <span id="js-buy-volume-rate">0</span></div>
   <div id="graph" class="aGraph"></div>
 </body>
+<script src="main.js"></script>
 <script>
-  var ws = new WebSocket("wss://ws-feed.gdax.com"),
-      $ethPrice = $('#js-eth-price'),
-      $sellOrders = $('#js-sell-orders'),
-      $sellVolume = $('#js-sell-volume'),
-      $sellVolumeRate = $('#js-sell-volume-rate'),
-      $buyOrders = $('#js-buy-orders'),
-      $buyVolume = $('#js-buy-volume'),
-      $buyVolumeRate = $('#js-buy-volume-rate'),
-      sellVolumeArr = [],
-      buyVolumeArr = [],
-      sellRateArr = [],
-      buyRateArr = [],
-      plotInitialized = false;
+  // var ws = new WebSocket("wss://ws-feed.gdax.com"),
+  //     $ethPrice = $('#js-eth-price'),
+  //     $sellOrders = $('#js-sell-orders'),
+  //     $sellVolume = $('#js-sell-volume'),
+  //     $sellVolumeRate = $('#js-sell-volume-rate'),
+  //     $buyOrders = $('#js-buy-orders'),
+  //     $buyVolume = $('#js-buy-volume'),
+  //     $buyVolumeRate = $('#js-buy-volume-rate'),
+  //     sellVolumeArr = [],
+  //     buyVolumeArr = [],
+  //     sellRateArr = [],
+  //     buyRateArr = [],
+  //     plotInitialized = false;
 
-  window.setInterval(function() {
-    var currentTime = new Date();
+  // window.setInterval(function() {
+  //   var currentTime = new Date();
 
-    _.remove(sellVolumeArr, function(data) {
-      return (currentTime - new Date(data.time)) > 1000;
-    });
+  //   _.remove(sellVolumeArr, function(data) {
+  //     return (currentTime - new Date(data.time)) > 1000;
+  //   });
 
-    _.remove(buyVolumeArr, function(data) {
-      return (currentTime - new Date(data.time)) > 1000;
-    });
+  //   _.remove(buyVolumeArr, function(data) {
+  //     return (currentTime - new Date(data.time)) > 1000;
+  //   });
 
-    var sellRate = _.meanBy(sellVolumeArr, function(data) { return Number(data.size); });
-    var buyRate = _.meanBy(buyVolumeArr, function(data) { return Number(data.size); });
+  //   var sellRate = _.meanBy(sellVolumeArr, function(data) { return Number(data.size); });
+  //   var buyRate = _.meanBy(buyVolumeArr, function(data) { return Number(data.size); });
 
-    $sellVolumeRate.html(sellRate);
-    $buyVolumeRate.html(buyRate);
+  //   $sellVolumeRate.html(sellRate);
+  //   $buyVolumeRate.html(buyRate);
 
-    console.log(sellRateArr)
+  //   console.log(sellRateArr)
 
-    var currentDate = new Date();
+  //   var currentDate = new Date();
 
-    if (sellRate) {
-      sellRateArr.push({ x : currentDate.valueOf(), y : sellRate });
-    }
+  //   if (sellRate) {
+  //     sellRateArr.push({ x : currentDate.valueOf(), y : sellRate });
+  //   }
 
-    if (buyRate) {
-      buyRateArr.push({ x : currentDate.valueOf(), y : buyRate });
-    }
+  //   if (buyRate) {
+  //     buyRateArr.push({ x : currentDate.valueOf(), y : buyRate });
+  //   }
 
-    if (sellRateArr.length > 100) {
-      sellRateArr.shift();
-    }
+  //   if (sellRateArr.length > 100) {
+  //     sellRateArr.shift();
+  //   }
 
-    if (buyRateArr.length > 100) {
-      buyRateArr.shift();
-    }
+  //   if (buyRateArr.length > 100) {
+  //     buyRateArr.shift();
+  //   }
 
-    if (sellVolumeArr.length > 0) {
-      console.log([sellRateArr, buyRateArr])
-      if (!plotInitialized) {
-        d3Plotter([sellRateArr, buyRateArr]);
-        plotInitialized = true;
-      } else {
-        updatePlot([sellRateArr, buyRateArr]);
-      }
-    }
-  }, 100);
+  //   if (sellVolumeArr.length > 0) {
+  //     console.log([sellRateArr, buyRateArr])
+  //     if (!plotInitialized) {
+  //       d3Plotter([sellRateArr, buyRateArr]);
+  //       plotInitialized = true;
+  //     } else {
+  //       updatePlot([sellRateArr, buyRateArr]);
+  //     }
+  //   }
+  // }, 100);
 
-  ws.onmessage = function(resp) {
-    var data  = data = JSON.parse(resp.data);
-    // console.log(data)
-    if (data.type === 'ticker') {
-      $ethPrice.html(data.price);
-    }
-    if (data.type === 'received' && data.size) {
-      if (data.side === 'sell') {
-        sellVolumeArr.push(data);
-        $sellOrders.html(Number($sellOrders.html()) + 1);
-        $sellVolume.html(Number($sellVolume.html()) + Number(data.size));
-      } else {
-        buyVolumeArr.push(data);
-        $buyOrders.html(Number($buyOrders.html()) + 1);
-        $buyVolume.html(Number($buyVolume.html()) + Number(data.size));
-      }
-    }
-  };
-  ws.onopen = function() {
-    console.log('opened');
-    ws.send(JSON.stringify({
-      type : "subscribe",
-      product_ids : [
-        "ETH-USD"
-      ],
-      channels : [
-        "full",
-        {
-          "name" : "ticker",
-            "product_ids": [
-              "ETH-USD"
-            ]
-        }
-      ]
-    }));
-  }
+  // ws.onmessage = function(resp) {
+  //   var data  = data = JSON.parse(resp.data);
+  //   // console.log(data)
+  //   if (data.type === 'ticker') {
+  //     $ethPrice.html(data.price);
+  //   }
+  //   if (data.type === 'received' && data.size) {
+  //     if (data.side === 'sell') {
+  //       sellVolumeArr.push(data);
+  //       $sellOrders.html(Number($sellOrders.html()) + 1);
+  //       $sellVolume.html(Number($sellVolume.html()) + Number(data.size));
+  //     } else {
+  //       buyVolumeArr.push(data);
+  //       $buyOrders.html(Number($buyOrders.html()) + 1);
+  //       $buyVolume.html(Number($buyVolume.html()) + Number(data.size));
+  //     }
+  //   }
+  // };
+  // ws.onopen = function() {
+  //   console.log('opened');
+  //   ws.send(JSON.stringify({
+  //     type : "subscribe",
+  //     product_ids : [
+  //       "ETH-USD"
+  //     ],
+  //     channels : [
+  //       "full",
+  //       {
+  //         "name" : "ticker",
+  //           "product_ids": [
+  //             "ETH-USD"
+  //           ]
+  //       }
+  //     ]
+  //   }));
+  // }
 </script>
 </html>
