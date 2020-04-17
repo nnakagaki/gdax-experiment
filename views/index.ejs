@@ -12,6 +12,9 @@
   <div id="js-eth-price"></div>
   <div id="graph" class="aGraph"></div>
 </body>
+<script>
+  window.authObject = <%- JSON.stringify(authObject) %>;
+</script>
 <script src="main.js"></script>
 <script>
   // var ws = new WebSocket("wss://ws-feed.gdax.com"),

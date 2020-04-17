@@ -3,6 +3,7 @@ export default class Strategy {
     this.currentValue = currentValue;
     this.lowestValue = lowestValue;
     this.highestValue = highestValue;
+    this.mostRecentPricePointActedOn = (this.highestValue + this.lowestValue) / 2;
     this.shouldBuy = false;
     this.shouldSell = false;
     this.armedToBuy = false;

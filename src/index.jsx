@@ -1,8 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import EthUSD from './EthUSD';
+import App from './App';
 
 ReactDOM.render(
-  <EthUSD />,
+  <App />,
   document.getElementById('app')
 );

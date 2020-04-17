@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { PublicClient } from 'coinbase-pro';
 import Strategy from './Strategy';
+import UserData from './UserData';
 
 export default function() {
   const [data, setData] = useState({});
@@ -16,28 +17,29 @@ export default function() {
         highestValue : result[0][2]
       });
       setData({
-        buyingPrice  : strategy.buyingPrice,
-        currentValue : strategy.currentValue,
-        highestValue : strategy.highestValue,
-        lowestValue  : strategy.lowestValue,
-        sellingPrice : strategy.sellingPrice,
-        shouldSell   : strategy.shouldSell,
-        shouldBuy    : strategy.shouldBuy
+        buyingPrice                 : strategy.buyingPrice,
+        currentValue                : strategy.currentValue,
+        highestValue                : strategy.highestValue,
+        lowestValue                 : strategy.lowestValue,
+        mostRecentPricePointActedOn : strategy.mostRecentPricePointActedOn,
+        sellingPrice                : strategy.sellingPrice,
+        shouldSell                  : strategy.shouldSell,
+        shouldBuy                   : strategy.shouldBuy
       });
       setInitialized(true);
       setInterval(() => {
         publicClient.getProductTicker('ETH-USD').then((result) => {
-          console.log(result)
           const { price } = result;
           strategy.update(price);
           setData({
-            buyingPrice  : strategy.buyingPrice,
-            currentValue : strategy.currentValue,
-            highestValue : strategy.highestValue,
-            lowestValue  : strategy.lowestValue,
-            sellingPrice : strategy.sellingPrice,
-            shouldSell   : strategy.shouldSell,
-            shouldBuy    : strategy.shouldBuy
+            buyingPrice                 : strategy.buyingPrice,
+            currentValue                : strategy.currentValue,
+            highestValue                : strategy.highestValue,
+            lowestValue                 : strategy.lowestValue,
+            mostRecentPricePointActedOn : strategy.mostRecentPricePointActedOn,
+            sellingPrice                : strategy.sellingPrice,
+            shouldSell                  : strategy.shouldSell,
+            shouldBuy                   : strategy.shouldBuy
           });
         });
       }, 1000);
@@ -46,8 +48,10 @@ export default function() {
 
   return (
     <>
+      <UserData />
       { initialized && (
         <>
+          <div>Most recent price point acted on: {data.mostRecentPricePointActedOn}</div>
           <div>currentETHInUSD: {data.currentValue}</div>
           <div>highestETHInUSD: {data.highestValue}</div>
           <div>sell when ETH in USD is lower than: {data.sellingPrice}</div>
